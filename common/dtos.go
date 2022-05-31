@@ -1,6 +1,8 @@
 package common
 
-import "time"
+import (
+	"time"
+)
 
 type LoginDto struct {
 	User     string `json:"user" binding:"required"`
@@ -17,11 +19,10 @@ type UserDto struct {
 }
 
 type ProjectDto struct {
-	Title                string    `json:"title" binding:"required"`
-	Description          string    `json:"description" binding:"required"`
-	GoalBacking          float64   `json:"goal_backing" binding:"required"`
-	Milestone1Date       time.Time `json:"milestone_1_date" binding:"required"`
-	Milestone2Date       time.Time `json:"milestone_2_date" binding:"required"`
-	Milestone3Date       time.Time `json:"milestone_3_date" binding:"required"`
-	SmartContractAddress string    `json:"smart_contract_address" binding:"required"`
+	Title          string    `json:"title" binding:"required"`
+	Description    string    `json:"description" binding:"required"`
+	GoalBacking    string    `json:"goal_backing" binding:"required"`
+	Milestone1Date time.Time `json:"milestone_1_date" binding:"required"`
+	Milestone2Date time.Time `json:"milestone_2_date" binding:"required"`
+	Milestone3Date time.Time `json:"milestone_3_date" binding:"required"`
 }

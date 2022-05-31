@@ -20,5 +20,5 @@ func PrivateRoutes(g *gin.RouterGroup) {
 	})
 	g.GET("/project")
 	g.POST("/createProject", CreateProjectHandler())
-
+	g.POST("/contribute")
 }

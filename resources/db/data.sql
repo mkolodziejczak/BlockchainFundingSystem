@@ -18,6 +18,7 @@ goal REAL NOT NULL,
 milestone_1_date DATETIME NOT NULL,
 milestone_2_date DATETIME NOT NULL,
 milestone_3_date DATETIME NOT NULL,
+goal_date DATETIME NOT NULL,
 smart_contract_address TEXT NOT NULL,
 FOREIGN KEY(owner_id) REFERENCES users(id)
 );

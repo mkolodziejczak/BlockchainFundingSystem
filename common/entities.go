@@ -23,6 +23,7 @@ type Project struct {
 	Milestone1Date       time.Time
 	Milestone2Date       time.Time
 	Milestone3Date       time.Time
+	GoalDate             time.Time
 }
 
 type Backing struct {

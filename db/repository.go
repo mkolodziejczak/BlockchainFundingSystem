@@ -69,10 +69,27 @@ func LoginUser(dto common.LoginDto) (int, error) {
 
 }
 
-func CreateProject(dto common.ProjectDto, userId int) (int, error) {
+func GetUserWalletId(userId int) (string, error) {
+	db, err := GetConnection()
+
+	row := db.db.QueryRow("SELECT wallet_id FROM users WHERE id=?", userId)
+
+	if err != nil {
+		return "", err
+	}
+	user := common.User{}
+	if err = row.Scan(&user.WalletAddress); err == sql.ErrNoRows {
+		log.Printf("Id not found")
+		return "", sql.ErrNoRows
+	}
+	return user.WalletAddress, err
+
+}
+
+func CreateProject(dto common.ProjectDto, userId int, contractAddress string) (int, error) {
 	db, err := GetConnection()
 	res, err := db.db.Exec("INSERT INTO projects VALUES(NULL,?,?,?,?,?,?,?,?);",
-		userId, dto.Title, dto.Description, dto.GoalBacking, dto.Milestone1Date, dto.Milestone2Date, dto.Milestone3Date, dto.SmartContractAddress)
+		userId, dto.Title, dto.Description, dto.GoalBacking, dto.Milestone1Date, dto.Milestone2Date, dto.Milestone3Date, contractAddress)
 	if err != nil {
 		return 0, err
 	}

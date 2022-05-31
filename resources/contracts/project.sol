@@ -26,6 +26,7 @@ contract Project {
     address[] backers;
     address[] firstAcceptanceVote;
     address[] secondAcceptanceVote;
+    mapping ( address => bool ) backersToRefund;
 
     event BackingReceived( address contributor, uint amount, uint totalBacking );
     event OwnerPaid( address recipient, uint percentage, uint256 amount );
@@ -44,6 +45,11 @@ contract Project {
 
     modifier isFundraising() {
         require( state == State.Fundraising );
+        _;
+    }
+
+    modifier isFailedOrExpired() {
+        require( state == State.Failed || state == State.Expired );
         _;
     }
 
@@ -70,6 +76,7 @@ contract Project {
         require( msg.sender != owner );
         backing[ msg.sender ] = backing[ msg.sender ] + msg.value ;
         backers.push( msg.sender );
+        backersToRefund[ msg.sender ] = true;
         currentBalance = currentBalance + msg.value ;
         totalBacking = currentBalance;
         emit BackingReceived( msg.sender, msg.value, currentBalance );
@@ -87,15 +94,24 @@ contract Project {
     }
 
     function getRefund( uint percentage ) internal returns ( bool ) {
+        bool failure = false;
+
         for ( uint i = 0; i < backers.length; i++ ) {
             uint256 amountToRefund = backing[ backers[i] ] * ( percentage / 100 );
-            if( payable( backers[i] ).send( amountToRefund ) ) {
-                emit RefundPaid( backers[i], percentage, toPayOut );
-                return true;
+
+            if( backersToRefund[ backers[i] ] ) {
+                if( payable( backers[i] ).send( amountToRefund ) ) {
+                    emit RefundPaid( backers[i], percentage, amountToRefund );
+                    backersToRefund[ backers[i] ] = false;
+                } else {
+                    failure = true;
+                }
             }
-            return false;
         }
+
+        return failure;
     }
+
 
     function voteForMilestone1Acceptance() external eligibleForFirstAcceptanceVote {
         require( backing[ msg.sender ] > 0 );
@@ -143,7 +159,7 @@ contract Project {
         amountGoal = goalBacking;
     }
 
-    function processProjectStatus() public {
+    function processProjectStatus() external {
         if( state == State.Fundraising && block.timestamp > goalDeadline ) {
             if ( totalBacking >= goalBacking ) {
                 proceedToNextMilestone( State.Milestone1 );
@@ -164,14 +180,27 @@ contract Project {
 
     function proceedToNextMilestone( State nextState ) internal {
         if( nextState == State.Milestone1 ) {
-            payOut( 30 );
-            state = State.Milestone1;
+            if ( payOut( 30 ) ) {
+                state = State.Milestone1;
+            }
         } else if( nextState == State.Milestone2 ) {
-            payOut( 40 );
-            state = State.Milestone2;
+            if ( payOut( 40 ) ) {
+                state = State.Milestone2;
+            }
         } else if ( nextState == State.Milestone3 ) {
-            payOut( 30 );
-            state = State.Milestone3;
+            if ( payOut( 30 ) ) {
+                state = State.Milestone3;
+            }
         }
+    }
+
+    function checkIfFullyRefunded() external view isFailedOrExpired returns (bool) {
+        bool refunded = true;
+        for ( uint i = 0; i < backers.length; i++ ) {
+            if( backersToRefund[ backers[i] ] ) {
+                refunded = false;
+            }
+        }
+        return refunded;
     }
 }
